@@ -1,15 +1,23 @@
 // ------------------------------
-// PreloadScene: Load assets
+// PreloadScene: Load assets and generate textures
 // ------------------------------
 class PreloadScene extends Phaser.Scene {
   constructor() {
     super({ key: 'PreloadScene' });
   }
   preload() {
-    this.load.image('librarian', 'assets/Freyja.png');
+    // Load the sprites using the correct filenames
+    this.load.image('freyja', 'assets/freyja.png');
     this.load.image('zombie', 'assets/zombie.png');
     this.load.image('terminal', 'assets/terminal.png');
-    // Optionally you can load an image for bookshelves or create obstacles with graphics
+    
+    // Generate a bookshelf texture if no bookshelf image is provided.
+    // This will create a 100x50 rectangle with a bookshelf-like brown color.
+    let gfx = this.add.graphics();
+    gfx.fillStyle(0x8B4513, 1);
+    gfx.fillRect(0, 0, 100, 50);
+    gfx.generateTexture('bookshelf', 100, 50);
+    gfx.destroy();
   }
   create() {
     // Start the main game scene with level 1
@@ -28,18 +36,18 @@ class GameScene extends Phaser.Scene {
     this.level = data.level || 1;
   }
   create() {
-    // Create the player (librarian)
-    this.player = this.physics.add.sprite(50, 300, 'librarian').setScale(0.5);
+    // Create the player (librarian) using the "freyja" sprite
+    this.player = this.physics.add.sprite(50, 300, 'freyja').setScale(0.5);
+    
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
     
     // Create obstacles (bookshelves) as a static group
     this.obstacles = this.physics.add.staticGroup();
-    // Example obstacles – you can adjust positions and sizes as desired
-    this.obstacles.create(300, 100, 'terminal')  // using the terminal image as a placeholder
-      .setScale(0.5).refreshBody();
-    this.obstacles.create(400, 400, 'terminal')
-      .setScale(0.5).refreshBody();
+    // Add a few bookshelf obstacles at fixed positions (adjust as desired)
+    this.obstacles.create(300, 150, 'bookshelf').setScale(0.5).refreshBody();
+    this.obstacles.create(500, 400, 'bookshelf').setScale(0.5).refreshBody();
+    this.obstacles.create(600, 200, 'bookshelf').setScale(0.5).refreshBody();
     
     // Create zombies group – number increases with level
     this.zombies = this.physics.add.group();
@@ -88,7 +96,7 @@ class GameScene extends Phaser.Scene {
 }
 
 // ------------------------------
-// PuzzleScene: Terminal puzzle mode
+// PuzzleScene: Terminal puzzle mode with math questions (including prealgebra)
 // ------------------------------
 class PuzzleScene extends Phaser.Scene {
   constructor() {
@@ -107,9 +115,8 @@ class PuzzleScene extends Phaser.Scene {
     this.startTime = this.time.now;
     this.timeLimit = 60000; // 60 seconds per question
   }
-  // Updated generateQuestion now includes a "prealgebra" option
+  // Generate a question of type multiplication, sorting, word, or prealgebra
   generateQuestion() {
-    // Randomly choose a type among multiplication, sorting, word, or prealgebra
     let types = ['multiplication', 'sorting', 'word', 'prealgebra'];
     let type = Phaser.Utils.Array.GetRandom(types);
     if (type === 'multiplication') {
@@ -136,8 +143,7 @@ class PuzzleScene extends Phaser.Scene {
         let y = Phaser.Math.Between(1, x);
         return { text: `If you have ${x} candies and give away ${y}, how many left?`, answer: (x - y).toString() };
       }
-    } else { // prealgebra
-      // Generate a linear equation with parentheses: e.g., a(x + b) = c
+    } else { // prealgebra: e.g., a(x + b) = c
       let a = Phaser.Math.Between(1, 5);
       let b = Phaser.Math.Between(1, 10);
       let xVal = Phaser.Math.Between(1, 10);
@@ -172,7 +178,7 @@ class PuzzleScene extends Phaser.Scene {
         this.scene.start('GameOverScene', { level: this.level });
       }
     } else {
-      // Allow numbers, letters, spaces, and common symbols for algebra answers
+      // Allow alphanumeric characters and common symbols for algebra answers
       if (/^[0-9a-zA-Z+\-()*= ]$/.test(event.key)) {
         this.inputText += event.key;
       }
@@ -184,8 +190,9 @@ class PuzzleScene extends Phaser.Scene {
     if (remaining === 0) {
       this.scene.start('GameOverScene', { level: this.level });
     }
-    // Clear previous texts and draw updated texts
+    // Clear the scene and re-add text (using a single container for crisp text)
     this.cameras.main.setBackgroundColor('#ffffff');
+    this.children.removeAll();
     this.add.text(10, 10, `Question ${this.questionIndex + 1} of ${this.numQuestions}`, { font: '24px Arial', fill: '#000' });
     this.add.text(10, 50, this.currentQuestion.text, { font: '24px Arial', fill: '#000' });
     this.add.text(10, 100, `Your answer: ${this.inputText}`, { font: '24px Arial', fill: '#000' });
@@ -194,7 +201,7 @@ class PuzzleScene extends Phaser.Scene {
 }
 
 // ------------------------------
-// GameOverScene: Now with Restart Y/N toggle
+// GameOverScene: With Restart Y/N toggle
 // ------------------------------
 class GameOverScene extends Phaser.Scene {
   constructor() {
@@ -248,6 +255,8 @@ const config = {
   width: 800,
   height: 600,
   backgroundColor: '#ffffff',
+  pixelArt: true,       // Ensures crisp rendering for pixel art and text
+  roundPixels: true,    // Rounds positions to whole pixels
   physics: {
     default: 'arcade',
     arcade: { debug: false }
