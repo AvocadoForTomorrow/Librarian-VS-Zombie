@@ -6,21 +6,22 @@ class PreloadScene extends Phaser.Scene {
     super({ key: 'PreloadScene' });
   }
   preload() {
-    // Load the sprites using the correct filenames
+    // Load sprites using the correct filenames
     this.load.image('freyja', 'assets/freyja.png');
     this.load.image('zombie', 'assets/zombie.png');
     this.load.image('terminal', 'assets/terminal.png');
-    
-    // Generate a bookshelf texture if no bookshelf image is provided.
-    // This will create a 100x50 rectangle with a bookshelf-like brown color.
+
+    // Generate a bookshelf texture with a visible border.
     let gfx = this.add.graphics();
-    gfx.fillStyle(0x8B4513, 1);
-    gfx.fillRect(0, 0, 100, 50);
-    gfx.generateTexture('bookshelf', 100, 50);
+    gfx.fillStyle(0xCD853F, 1); // Peru color for the shelf
+    gfx.fillRect(0, 0, 120, 60);
+    gfx.lineStyle(4, 0x8B4513, 1); // Darker brown border
+    gfx.strokeRect(0, 0, 120, 60);
+    gfx.generateTexture('bookshelf', 120, 60);
     gfx.destroy();
   }
   create() {
-    // Start the main game scene with level 1
+    // Start the main gameplay scene with level 1
     this.scene.start('GameScene', { level: 1 });
   }
 }
@@ -44,10 +45,10 @@ class GameScene extends Phaser.Scene {
     
     // Create obstacles (bookshelves) as a static group
     this.obstacles = this.physics.add.staticGroup();
-    // Add a few bookshelf obstacles at fixed positions (adjust as desired)
-    this.obstacles.create(300, 150, 'bookshelf').setScale(0.5).refreshBody();
-    this.obstacles.create(500, 400, 'bookshelf').setScale(0.5).refreshBody();
-    this.obstacles.create(600, 200, 'bookshelf').setScale(0.5).refreshBody();
+    // Add a few bookshelf obstacles at fixed positions (visible at full size)
+    this.obstacles.create(300, 150, 'bookshelf').refreshBody();
+    this.obstacles.create(500, 350, 'bookshelf').refreshBody();
+    this.obstacles.create(600, 200, 'bookshelf').refreshBody();
     
     // Create zombies group – number increases with level
     this.zombies = this.physics.add.group();
@@ -62,11 +63,11 @@ class GameScene extends Phaser.Scene {
     this.physics.add.collider(this.player, this.obstacles);
     this.physics.add.collider(this.zombies, this.obstacles);
     
-    // Overlap between player and terminal triggers puzzle mode
+    // Overlap: player with terminal to enter puzzle mode
     this.physics.add.overlap(this.player, this.terminal, () => {
       this.scene.start('PuzzleScene', { level: this.level });
     });
-    // Overlap between player and zombies triggers game over
+    // Overlap: player with zombies to trigger game over
     this.physics.add.overlap(this.player, this.zombies, () => {
       this.scene.start('GameOverScene', { level: this.level });
     });
@@ -96,7 +97,7 @@ class GameScene extends Phaser.Scene {
 }
 
 // ------------------------------
-// PuzzleScene: Terminal puzzle mode with math questions (including prealgebra)
+// PuzzleScene: Terminal puzzle mode with math questions
 // ------------------------------
 class PuzzleScene extends Phaser.Scene {
   constructor() {
@@ -115,7 +116,7 @@ class PuzzleScene extends Phaser.Scene {
     this.startTime = this.time.now;
     this.timeLimit = 60000; // 60 seconds per question
   }
-  // Generate a question of type multiplication, sorting, word, or prealgebra
+  // Generate a math question (multiplication, sorting, word, or prealgebra)
   generateQuestion() {
     let types = ['multiplication', 'sorting', 'word', 'prealgebra'];
     let type = Phaser.Utils.Array.GetRandom(types);
@@ -143,7 +144,7 @@ class PuzzleScene extends Phaser.Scene {
         let y = Phaser.Math.Between(1, x);
         return { text: `If you have ${x} candies and give away ${y}, how many left?`, answer: (x - y).toString() };
       }
-    } else { // prealgebra: e.g., a(x + b) = c
+    } else { // prealgebra: for example, a(x + b) = c
       let a = Phaser.Math.Between(1, 5);
       let b = Phaser.Math.Between(1, 10);
       let xVal = Phaser.Math.Between(1, 10);
@@ -166,7 +167,7 @@ class PuzzleScene extends Phaser.Scene {
           this.inputText = '';
           this.startTime = this.time.now;
         } else {
-          // Completed all questions – level cleared!
+          // Completed all questions—level cleared!
           if (this.level < 5) {
             this.scene.start('GameScene', { level: this.level + 1 });
           } else {
@@ -174,11 +175,11 @@ class PuzzleScene extends Phaser.Scene {
           }
         }
       } else {
-        // Wrong answer ends game
+        // Wrong answer ends the game
         this.scene.start('GameOverScene', { level: this.level });
       }
     } else {
-      // Allow alphanumeric characters and common symbols for algebra answers
+      // Allow alphanumeric characters and common symbols
       if (/^[0-9a-zA-Z+\-()*= ]$/.test(event.key)) {
         this.inputText += event.key;
       }
@@ -190,13 +191,13 @@ class PuzzleScene extends Phaser.Scene {
     if (remaining === 0) {
       this.scene.start('GameOverScene', { level: this.level });
     }
-    // Clear the scene and re-add text (using a single container for crisp text)
+    // Clear and re-add text objects for crisp, updated text
     this.cameras.main.setBackgroundColor('#ffffff');
     this.children.removeAll();
-    this.add.text(10, 10, `Question ${this.questionIndex + 1} of ${this.numQuestions}`, { font: '24px Arial', fill: '#000' });
-    this.add.text(10, 50, this.currentQuestion.text, { font: '24px Arial', fill: '#000' });
-    this.add.text(10, 100, `Your answer: ${this.inputText}`, { font: '24px Arial', fill: '#000' });
-    this.add.text(10, 150, `Time remaining: ${remaining} seconds`, { font: '24px Arial', fill: '#f00' });
+    this.add.text(10, 10, `Question ${this.questionIndex + 1} of ${this.numQuestions}`, { font: '32px monospace', fill: '#000' });
+    this.add.text(10, 50, this.currentQuestion.text, { font: '32px monospace', fill: '#000' });
+    this.add.text(10, 100, `Your answer: ${this.inputText}`, { font: '32px monospace', fill: '#000' });
+    this.add.text(10, 150, `Time remaining: ${remaining} seconds`, { font: '32px monospace', fill: '#f00' });
   }
 }
 
@@ -214,8 +215,8 @@ class GameOverScene extends Phaser.Scene {
   }
   create() {
     this.cameras.main.setBackgroundColor('#ffffff');
-    this.add.text(200, 200, 'GAME OVER', { font: '48px Arial', fill: '#ff0000' });
-    this.promptText = this.add.text(200, 300, this.restartPrompt, { font: '32px Arial', fill: '#000' });
+    this.add.text(200, 200, 'GAME OVER', { font: '48px monospace', fill: '#ff0000' });
+    this.promptText = this.add.text(200, 300, this.restartPrompt, { font: '32px monospace', fill: '#000' });
     this.input.keyboard.on('keydown-Y', () => {
       if (this.waitingForRestart) {
         this.scene.start('GameScene', { level: 1 });
@@ -239,8 +240,8 @@ class WinScene extends Phaser.Scene {
   }
   create() {
     this.cameras.main.setBackgroundColor('#ffffff');
-    this.add.text(150, 250, 'CONGRATULATIONS! YOU WIN!', { font: '48px Arial', fill: '#00ff00' });
-    this.add.text(150, 350, 'Press any key to restart.', { font: '32px Arial', fill: '#000' });
+    this.add.text(150, 250, 'CONGRATULATIONS! YOU WIN!', { font: '48px monospace', fill: '#00ff00' });
+    this.add.text(150, 350, 'Press any key to restart.', { font: '32px monospace', fill: '#000' });
     this.input.keyboard.once('keydown', () => {
       this.scene.start('GameScene', { level: 1 });
     });
