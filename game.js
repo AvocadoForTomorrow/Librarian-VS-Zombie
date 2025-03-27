@@ -7,7 +7,7 @@ class PreloadScene extends Phaser.Scene {
   }
   preload() {
     // Load sprites using the correct filenames
-    this.load.image('freyja', 'assets/freyja.png');
+    this.load.image('Freyja', 'assets/Freyja.png');
     this.load.image('zombie', 'assets/zombie.png');
     this.load.image('terminal', 'assets/terminal.png');
 
