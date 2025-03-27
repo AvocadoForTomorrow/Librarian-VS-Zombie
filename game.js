@@ -6,7 +6,7 @@ class PreloadScene extends Phaser.Scene {
     super({ key: 'PreloadScene' });
   }
   preload() {
-    // Load sprites using the correct filenames
+    // Load sprites using the correct filenames (case-sensitive)
     this.load.image('Freyja', 'assets/Freyja.png');
     this.load.image('zombie', 'assets/zombie.png');
     this.load.image('terminal', 'assets/terminal.png');
@@ -37,15 +37,15 @@ class GameScene extends Phaser.Scene {
     this.level = data.level || 1;
   }
   create() {
-    // Create the player (librarian) using the "Freyja" sprite
-    this.player = this.physics.add.sprite(50, 300, 'freyja').setDisplaySize(200, 200);
+    // Create the player (librarian) using the "Freyja" sprite and set display size to 200×200 pixels
+    this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(200, 200);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
     
     // Create obstacles (bookshelves) as a static group
     this.obstacles = this.physics.add.staticGroup();
-    // Add a few bookshelf obstacles at fixed positions (visible at full size)
+    // Add a few bookshelf obstacles at fixed positions
     this.obstacles.create(300, 150, 'bookshelf').refreshBody();
     this.obstacles.create(500, 350, 'bookshelf').refreshBody();
     this.obstacles.create(600, 200, 'bookshelf').refreshBody();
@@ -56,7 +56,8 @@ class GameScene extends Phaser.Scene {
     for (let i = 0; i < zombieCount; i++) {
       let x = Phaser.Math.Between(650, 750);
       let y = Phaser.Math.Between(50, 550);
-      this.zombies.create(x, y, 'zombie').setDisplaySize(300, 300);
+      // Set display size to 400×400 pixels (double Freyja's size)
+      this.zombies.create(x, y, 'zombie').setDisplaySize(400, 400);
     }
     
     // Set up collisions
@@ -67,7 +68,7 @@ class GameScene extends Phaser.Scene {
     this.physics.add.overlap(this.player, this.terminal, () => {
       this.scene.start('PuzzleScene', { level: this.level });
     });
-    // Overlap: player with zombies to trigger game over
+    // Overlap: player with zombies triggers game over
     this.physics.add.overlap(this.player, this.zombies, () => {
       this.scene.start('GameOverScene', { level: this.level });
     });
