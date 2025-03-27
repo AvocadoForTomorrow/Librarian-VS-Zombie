@@ -37,8 +37,8 @@ class GameScene extends Phaser.Scene {
     this.level = data.level || 1;
   }
   create() {
-    // Create the player (librarian) using the "freyja" sprite
-    this.player = this.physics.add.sprite(50, 300, 'freyja').setScale(0.5);
+    // Create the player (librarian) using the "Freyja" sprite
+    this.player = this.physics.add.sprite(50, 300, 'Freyja').setScale(0.5);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
