@@ -253,8 +253,8 @@ class WinScene extends Phaser.Scene {
 // ------------------------------
 const config = {
   type: Phaser.AUTO,
-  width: 800,
-  height: 600,
+  width: 1920,
+  height: 1080,
   backgroundColor: '#ffffff',
   pixelArt: true,       // Ensures crisp rendering for pixel art and text
   roundPixels: true,    // Rounds positions to whole pixels
