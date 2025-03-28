@@ -14,10 +14,10 @@ class PreloadScene extends Phaser.Scene {
     // Generate a bookshelf texture with a visible border.
     let gfx = this.add.graphics();
     gfx.fillStyle(0xCD853F, 1); // Peru color for the shelf
-    gfx.fillRect(0, 0, 200, 60);
+    gfx.fillRect(0, 0, 120, 60);
     gfx.lineStyle(4, 0x8B4513, 1); // Darker brown border
-    gfx.strokeRect(0, 0, 200, 60);
-    gfx.generateTexture('bookshelf', 200, 60);
+    gfx.strokeRect(0, 0, 120, 60);
+    gfx.generateTexture('bookshelf', 120, 60);
     gfx.destroy();
   }
   create() {
@@ -27,7 +27,7 @@ class PreloadScene extends Phaser.Scene {
 }
 
 // ------------------------------
-// GameScene: Main gameplay (chase level)
+// GameScene: Main gameplay (chase level) with touchscreen controls
 // ------------------------------
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -37,34 +37,32 @@ class GameScene extends Phaser.Scene {
     this.level = data.level || 1;
   }
   create() {
-    // Create the player (librarian) using the "Freyja" sprite and set display size to 20×20 pixels
-    this.player = this.physics.add.sprite(40, 40, 'Freyja').setDisplaySize(40, 40);
+    // Create the player (librarian) using the "Freyja" sprite at 200×200 pixels
+    this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(200, 200);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
     
     // Create obstacles (bookshelves) as a static group
     this.obstacles = this.physics.add.staticGroup();
-    // Add a few bookshelf obstacles at fixed positions
-    this.obstacles.create(350, 150, 'bookshelf').refreshBody();
-    this.obstacles.create(600, 350, 'bookshelf').refreshBody();
-    this.obstacles.create(800, 200, 'bookshelf').refreshBody();
+    this.obstacles.create(300, 150, 'bookshelf').refreshBody();
+    this.obstacles.create(500, 350, 'bookshelf').refreshBody();
+    this.obstacles.create(600, 200, 'bookshelf').refreshBody();
     
-    // Create zombies group – number increases with level
+    // Create zombies group – number increases with level; each zombie 400×400 pixels
     this.zombies = this.physics.add.group();
     let zombieCount = 5 + (this.level - 1) * 2;
     for (let i = 0; i < zombieCount; i++) {
       let x = Phaser.Math.Between(650, 750);
       let y = Phaser.Math.Between(50, 550);
-      // Set display size to 80×80 pixels (double Freyja's size)
-      this.zombies.create(x, y, 'zombie').setDisplaySize(80, 80);
+      this.zombies.create(x, y, 'zombie').setDisplaySize(400, 400);
     }
     
     // Set up collisions
     this.physics.add.collider(this.player, this.obstacles);
     this.physics.add.collider(this.zombies, this.obstacles);
     
-    // Overlap: player with terminal to enter puzzle mode
+    // Overlap: player with terminal triggers puzzle mode
     this.physics.add.overlap(this.player, this.terminal, () => {
       this.scene.start('PuzzleScene', { level: this.level });
     });
@@ -73,21 +71,39 @@ class GameScene extends Phaser.Scene {
       this.scene.start('GameOverScene', { level: this.level });
     });
     
-    // Set up arrow keys for player movement
+    // Set up arrow keys for keyboard control
     this.cursors = this.input.keyboard.createCursorKeys();
   }
   update() {
-    this.player.setVelocity(0);
-    if (this.cursors.left.isDown) {
-      this.player.setVelocityX(-200);
-    } else if (this.cursors.right.isDown) {
-      this.player.setVelocityX(200);
+    // First check for touch input (pointer input)
+    if (this.input.pointer1.isDown) {
+      let pointer = this.input.pointer1;
+      // Calculate the difference vector from player to pointer
+      let dx = pointer.worldX - this.player.x;
+      let dy = pointer.worldY - this.player.y;
+      let dist = Math.sqrt(dx * dx + dy * dy);
+      // Only move if the pointer is sufficiently away from the player
+      if (dist > 10) {
+        let speed = 200;
+        this.player.setVelocity((dx / dist) * speed, (dy / dist) * speed);
+      } else {
+        this.player.setVelocity(0);
+      }
+    } else {
+      // Otherwise, use keyboard controls
+      this.player.setVelocity(0);
+      if (this.cursors.left.isDown) {
+        this.player.setVelocityX(-200);
+      } else if (this.cursors.right.isDown) {
+        this.player.setVelocityX(200);
+      }
+      if (this.cursors.up.isDown) {
+        this.player.setVelocityY(-200);
+      } else if (this.cursors.down.isDown) {
+        this.player.setVelocityY(200);
+      }
     }
-    if (this.cursors.up.isDown) {
-      this.player.setVelocityY(-200);
-    } else if (this.cursors.down.isDown) {
-      this.player.setVelocityY(200);
-    }
+    
     // Make zombies chase the player
     this.zombies.children.iterate((zombie) => {
       if (zombie) {
@@ -254,8 +270,8 @@ class WinScene extends Phaser.Scene {
 // ------------------------------
 const config = {
   type: Phaser.AUTO,
-  width: 1000,
-  height: 500,
+  width: 1920,
+  height: 1080,
   backgroundColor: '#ffffff',
   pixelArt: true,       // Ensures crisp rendering for pixel art and text
   roundPixels: true,    // Rounds positions to whole pixels
