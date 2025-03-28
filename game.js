@@ -14,10 +14,10 @@ class PreloadScene extends Phaser.Scene {
     // Generate a bookshelf texture with a visible border.
     let gfx = this.add.graphics();
     gfx.fillStyle(0xCD853F, 1); // Peru color for the shelf
-    gfx.fillRect(0, 0, 120, 60);
+    gfx.fillRect(0, 0, 200, 60);
     gfx.lineStyle(4, 0x8B4513, 1); // Darker brown border
-    gfx.strokeRect(0, 0, 120, 60);
-    gfx.generateTexture('bookshelf', 120, 60);
+    gfx.strokeRect(0, 0, 200, 60);
+    gfx.generateTexture('bookshelf', 200, 60);
     gfx.destroy();
   }
   create() {
@@ -38,7 +38,7 @@ class GameScene extends Phaser.Scene {
   }
   create() {
     // Create the player (librarian) using the "Freyja" sprite and set display size to 20×20 pixels
-    this.player = this.physics.add.sprite(100, 100, 'Freyja').setDisplaySize(100, 100);
+    this.player = this.physics.add.sprite(40, 40, 'Freyja').setDisplaySize(40, 40);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
@@ -56,8 +56,8 @@ class GameScene extends Phaser.Scene {
     for (let i = 0; i < zombieCount; i++) {
       let x = Phaser.Math.Between(650, 750);
       let y = Phaser.Math.Between(50, 550);
-      // Set display size to 200×200 pixels (double Freyja's size)
-      this.zombies.create(x, y, 'zombie').setDisplaySize(200, 200);
+      // Set display size to 80×80 pixels (double Freyja's size)
+      this.zombies.create(x, y, 'zombie').setDisplaySize(80, 80);
     }
     
     // Set up collisions
