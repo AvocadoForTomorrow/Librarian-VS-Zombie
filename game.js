@@ -38,7 +38,7 @@ class GameScene extends Phaser.Scene {
   }
   create() {
     // Create the player (librarian) using the "Freyja" sprite and set display size to 20×20 pixels
-    this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(20, 20);
+    this.player = this.physics.add.sprite(20, 20, 'Freyja').setDisplaySize(20, 20);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
