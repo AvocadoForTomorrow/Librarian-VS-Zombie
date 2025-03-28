@@ -46,9 +46,9 @@ class GameScene extends Phaser.Scene {
     // Create obstacles (bookshelves) as a static group
     this.obstacles = this.physics.add.staticGroup();
     // Add a few bookshelf obstacles at fixed positions
-    this.obstacles.create(300, 150, 'bookshelf').refreshBody();
-    this.obstacles.create(500, 350, 'bookshelf').refreshBody();
-    this.obstacles.create(600, 200, 'bookshelf').refreshBody();
+    this.obstacles.create(350, 150, 'bookshelf').refreshBody();
+    this.obstacles.create(600, 350, 'bookshelf').refreshBody();
+    this.obstacles.create(800, 200, 'bookshelf').refreshBody();
     
     // Create zombies group – number increases with level
     this.zombies = this.physics.add.group();
@@ -254,8 +254,8 @@ class WinScene extends Phaser.Scene {
 // ------------------------------
 const config = {
   type: Phaser.AUTO,
-  width: 1920,
-  height: 1080,
+  width: 1000,
+  height: 500,
   backgroundColor: '#ffffff',
   pixelArt: true,       // Ensures crisp rendering for pixel art and text
   roundPixels: true,    // Rounds positions to whole pixels
