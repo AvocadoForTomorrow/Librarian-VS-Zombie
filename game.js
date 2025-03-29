@@ -6,7 +6,7 @@ class PreloadScene extends Phaser.Scene {
     super({ key: 'PreloadScene' });
   }
   preload() {
-    // Load sprites using the correct filenames (case-sensitive)
+    // Load sprites (keys are case-sensitive)
     this.load.image('Freyja', 'assets/Freyja.png');
     this.load.image('zombie', 'assets/zombie.png');
     this.load.image('terminal', 'assets/terminal.png');
@@ -21,13 +21,13 @@ class PreloadScene extends Phaser.Scene {
     gfx.destroy();
   }
   create() {
-    // Start the main gameplay scene with level 1
+    // Start the main gameplay scene at level 1
     this.scene.start('GameScene', { level: 1 });
   }
 }
 
 // ------------------------------
-// GameScene: Main gameplay (chase level) with touchscreen controls
+// GameScene: Main gameplay (chase level) with hard border and obstacles
 // ------------------------------
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -37,19 +37,23 @@ class GameScene extends Phaser.Scene {
     this.level = data.level || 1;
   }
   create() {
-    // Create the player (librarian) using the "Freyja" sprite at 200×200 pixels
+    // Create the player (librarian) using the "Freyja" sprite with display size 200×200 pixels
     this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(200, 200);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
     
-    // Create obstacles (bookshelves) as a static group
+    // Create obstacles (bookshelves) as a static group.
+    // Adding 5 bookshelves with different sizes and positions.
     this.obstacles = this.physics.add.staticGroup();
-    this.obstacles.create(300, 150, 'bookshelf').refreshBody();
-    this.obstacles.create(500, 350, 'bookshelf').refreshBody();
-    this.obstacles.create(600, 200, 'bookshelf').refreshBody();
+    this.obstacles.create(300, 150, 'bookshelf').setDisplaySize(120, 60).refreshBody();
+    this.obstacles.create(500, 350, 'bookshelf').setDisplaySize(120, 60).refreshBody();
+    this.obstacles.create(600, 200, 'bookshelf').setDisplaySize(120, 60).refreshBody();
+    this.obstacles.create(800, 100, 'bookshelf').setDisplaySize(150, 80).refreshBody();
+    this.obstacles.create(200, 500, 'bookshelf').setDisplaySize(100, 50).refreshBody();
     
-    // Create zombies group – number increases with level; each zombie 400×400 pixels
+    // Create zombies group – number increases with level.
+    // Each zombie will be displayed at 400×400 pixels.
     this.zombies = this.physics.add.group();
     let zombieCount = 5 + (this.level - 1) * 2;
     for (let i = 0; i < zombieCount; i++) {
@@ -58,31 +62,34 @@ class GameScene extends Phaser.Scene {
       this.zombies.create(x, y, 'zombie').setDisplaySize(400, 400);
     }
     
-    // Set up collisions
+    // Set up collisions between player/zombies and obstacles.
     this.physics.add.collider(this.player, this.obstacles);
     this.physics.add.collider(this.zombies, this.obstacles);
     
-    // Overlap: player with terminal triggers puzzle mode
+    // Overlap: player with terminal to enter puzzle mode.
     this.physics.add.overlap(this.player, this.terminal, () => {
       this.scene.start('PuzzleScene', { level: this.level });
     });
-    // Overlap: player with zombies triggers game over
+    // Overlap: player with zombies triggers game over.
     this.physics.add.overlap(this.player, this.zombies, () => {
       this.scene.start('GameOverScene', { level: this.level });
     });
     
-    // Set up arrow keys for keyboard control
+    // Set up keyboard controls.
     this.cursors = this.input.keyboard.createCursorKeys();
+    
+    // Add a hard border around the gameplay area.
+    this.border = this.add.graphics();
+    this.border.lineStyle(8, 0x000000, 1);
+    this.border.strokeRect(0, 0, this.game.config.width, this.game.config.height);
   }
   update() {
-    // First check for touch input (pointer input)
+    // Touchscreen control: if pointer is down, move towards pointer.
     if (this.input.pointer1.isDown) {
       let pointer = this.input.pointer1;
-      // Calculate the difference vector from player to pointer
       let dx = pointer.worldX - this.player.x;
       let dy = pointer.worldY - this.player.y;
       let dist = Math.sqrt(dx * dx + dy * dy);
-      // Only move if the pointer is sufficiently away from the player
       if (dist > 10) {
         let speed = 200;
         this.player.setVelocity((dx / dist) * speed, (dy / dist) * speed);
@@ -90,7 +97,7 @@ class GameScene extends Phaser.Scene {
         this.player.setVelocity(0);
       }
     } else {
-      // Otherwise, use keyboard controls
+      // Otherwise, use keyboard controls.
       this.player.setVelocity(0);
       if (this.cursors.left.isDown) {
         this.player.setVelocityX(-200);
@@ -104,7 +111,7 @@ class GameScene extends Phaser.Scene {
       }
     }
     
-    // Make zombies chase the player
+    // Make zombies chase the player.
     this.zombies.children.iterate((zombie) => {
       if (zombie) {
         this.physics.moveToObject(zombie, this.player, 100);
@@ -115,6 +122,7 @@ class GameScene extends Phaser.Scene {
 
 // ------------------------------
 // PuzzleScene: Terminal puzzle mode with math questions
+// Updated to avoid removing all children each frame.
 // ------------------------------
 class PuzzleScene extends Phaser.Scene {
   constructor() {
@@ -170,7 +178,13 @@ class PuzzleScene extends Phaser.Scene {
     }
   }
   create() {
-    // Listen for keyboard input
+    // Create persistent text objects instead of clearing all children every frame.
+    this.questionNumberText = this.add.text(10, 10, '', { font: '32px monospace', fill: '#000' });
+    this.questionText = this.add.text(10, 50, '', { font: '32px monospace', fill: '#000' });
+    this.answerText = this.add.text(10, 100, '', { font: '32px monospace', fill: '#000' });
+    this.timerText = this.add.text(10, 150, '', { font: '32px monospace', fill: '#f00' });
+    
+    // Listen for keyboard input.
     this.input.keyboard.on('keydown', this.handleKey, this);
   }
   handleKey(event) {
@@ -192,11 +206,11 @@ class PuzzleScene extends Phaser.Scene {
           }
         }
       } else {
-        // Wrong answer ends the game
+        // Wrong answer ends the game.
         this.scene.start('GameOverScene', { level: this.level });
       }
     } else {
-      // Allow alphanumeric characters and common symbols
+      // Allow alphanumeric characters and common symbols.
       if (/^[0-9a-zA-Z+\-()*= ]$/.test(event.key)) {
         this.inputText += event.key;
       }
@@ -208,13 +222,11 @@ class PuzzleScene extends Phaser.Scene {
     if (remaining === 0) {
       this.scene.start('GameOverScene', { level: this.level });
     }
-    // Clear and re-add text objects for crisp, updated text
-    this.cameras.main.setBackgroundColor('#ffffff');
-    this.children.removeAll();
-    this.add.text(10, 10, `Question ${this.questionIndex + 1} of ${this.numQuestions}`, { font: '32px monospace', fill: '#000' });
-    this.add.text(10, 50, this.currentQuestion.text, { font: '32px monospace', fill: '#000' });
-    this.add.text(10, 100, `Your answer: ${this.inputText}`, { font: '32px monospace', fill: '#000' });
-    this.add.text(10, 150, `Time remaining: ${remaining} seconds`, { font: '32px monospace', fill: '#f00' });
+    // Update text objects.
+    this.questionNumberText.setText(`Question ${this.questionIndex + 1} of ${this.numQuestions}`);
+    this.questionText.setText(this.currentQuestion.text);
+    this.answerText.setText(`Your answer: ${this.inputText}`);
+    this.timerText.setText(`Time remaining: ${remaining} seconds`);
   }
 }
 
