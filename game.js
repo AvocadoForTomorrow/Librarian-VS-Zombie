@@ -38,7 +38,7 @@ class GameScene extends Phaser.Scene {
   }
   create() {
     // Create the player (librarian) using the "Freyja" sprite with display size 200×200 pixels
-    this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(200, 200);
+    this.player = this.physics.add.sprite(50, 300, 'Freyja').setDisplaySize(50, 50);
     
     // Create the terminal as a static sprite
     this.terminal = this.physics.add.staticSprite(700, 500, 'terminal').setScale(0.5);
@@ -59,7 +59,7 @@ class GameScene extends Phaser.Scene {
     for (let i = 0; i < zombieCount; i++) {
       let x = Phaser.Math.Between(650, 750);
       let y = Phaser.Math.Between(50, 550);
-      this.zombies.create(x, y, 'zombie').setDisplaySize(400, 400);
+      this.zombies.create(x, y, 'zombie').setDisplaySize(100, 100);
     }
     
     // Set up collisions between player/zombies and obstacles.
